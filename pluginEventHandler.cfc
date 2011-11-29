@@ -54,27 +54,12 @@
 		</cfoutput>
 
 	</cffunction>
-	
-	<cffunction name="onBeforeContentSave" access="public" output="false">
-		<cfargument name="$" required="true" hint="mura scope">
-		
-	</cffunction>
 
 	<cffunction name="onRenderStart" access="public" output="true">
 		<cfargument name="$" required="true" hint="mura scope">
 
 		<cfset var headerCode = '' />
 		<cfset var path = "#$.globalConfig('context')#/plugins/#variables.pluginConfig.getDirectory()#" />
-		<cfset var body = $.content().getBody() />
-		<cfset var summary = $.content().getSummary() />
-
-		<cfif len( body )>
-			<cfset $.content().setBody( processMarkdown( $, body ) ) />
-		</cfif>
-
-		<cfif len( summary )>
-			<cfset $.content().setSummary( processMarkdown( $, summary ) ) />
-		</cfif>
 
 		<!--- Bring out the syntax highlighter! --->
 		<cfsavecontent variable="headerCode"><cfoutput>
@@ -83,6 +68,19 @@
 		</cfoutput></cfsavecontent>
 
 		<cfhtmlhead text="#headerCode#" />
+
+	</cffunction>
+
+	<cffunction name="onPageBodyRender" access="public" output="true">
+		<cfargument name="$" required="true" hint="mura scope">
+
+		<cfset var body = $.content().getBody() />
+		<cfset var summary = $.content().getSummary() />
+
+		<cfset body =  processMarkdown( $, body ) />
+		<cfset $.content().setSummary( processMarkdown( $, summary ) ) />
+		
+		<cfoutput>#body#</cfoutput>
 
 	</cffunction>
 
