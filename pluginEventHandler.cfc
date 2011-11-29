@@ -64,10 +64,51 @@
 		<cfargument name="$" required="true" hint="mura scope">
 
 		<cfset var headerCode = '' />
-		<cfset var path = "#$.globalConfig('context')#/plugins/#variables.pluginConfig.getDirectory()#/assets" />
+		<cfset var path = "#$.globalConfig('context')#/plugins/#variables.pluginConfig.getDirectory()#" />
+		<cfset var body = $.content().getBody() />
+		<cfset var summary = $.content().getSummary() />
 
-		<cfset $.content().setBody('you suck.') />
+		<cfif len( body )>
+			<cfset $.content().setBody( processMarkdown( $, body ) ) />
+		</cfif>
 
+		<cfif len( summary )>
+			<cfset $.content().setSummary( processMarkdown( $, summary ) ) />
+		</cfif>
+
+		<!--- Bring out the syntax highlighter! --->
+		<cfsavecontent variable="headerCode"><cfoutput>
+		<script type="text/javascript" src="#path#/assets/js/jquery.syntaxhighlighter.min.js"></script>
+		<script type="text/javascript" src="#path#/assets/js/shInit.js"></script>
+		</cfoutput></cfsavecontent>
+
+		<cfhtmlhead text="#headerCode#" />
+
+	</cffunction>
+
+	<cffunction name="processMarkdown" access="private" returntype="string" output="false">
+		<cfargument name="$" required="true" hint="mura scope">
+		<cfargument name="html" required="true" type="string">
+
+		<cfset var path = "#$.globalConfig('context')#/plugins/#variables.pluginConfig.getDirectory()#" />
+		<cfset var mkdownPath = [ expandPath( "#path#/markdown/markdownj.jar" ) ] />
+		<cfset var javaLoader = new javaloader.JavaLoader( mkdownPath, true ) />
+		<cfset var markdownProcessor = javaLoader.create( "com.petebevin.markdown.MarkdownProcessor" ).init() />
+		<cfset var returnHTML = '' />
+
+		<!--- First, process the markdown --->
+		<cfset returnHTML = markdownProcessor.markdown( arguments.html ) />
+
+		<!--- Then manipulate it a little bit to get our syntax highlighting working --->
+		<cfset returnHTML = 
+				reReplaceNoCase(
+					returnHTML,
+					'<pre><code>(.+?)</code></pre>',
+					'<pre class="highlight">\1</pre>',
+					'all'
+				) />
+
+		<cfreturn returnHTML />
 	</cffunction>
 
 </cfcomponent>
