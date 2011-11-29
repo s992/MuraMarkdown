@@ -11,6 +11,7 @@
 	<settings>
 	</settings>
 	<eventHandlers>
+		<eventHandler event="onApplicationLoad" component="pluginEventHandler" persist="false" />
 		<eventHandler event="onContentEdit" component="pluginEventHandler" persist="false" />
 		<eventHandler event="onBeforeContentSave" component="pluginEventHandler" persist="false" />
 		<eventHandler event="onRenderStart" component="pluginEventHandler" persist="false" />
