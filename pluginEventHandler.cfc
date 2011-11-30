@@ -113,8 +113,8 @@
 			'stripInitialWhitespace': true,
 			'alternateLines': false,
 			'defaultClassname': 'highlight',
-			'theme': 'balupton',
-			'themes': ['balupton'],
+			'theme': 'markdown',
+			'themes': ['markdown'],
 			'addSparkleExtension': true,
 			'prettifyBaseUrl': '#path#/assets/js/syntaxhighlighter/prettify',
 			'baseUrl': '#path#/assets/js/syntaxhighlighter'
