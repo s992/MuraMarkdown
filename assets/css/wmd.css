@@ -22,15 +22,20 @@
 
 .wmd-input 
 { 
-	height: 500px;
+	height: 320px;
 	width: 100%;
-	background-color: Gainsboro;
 	border: 1px solid DarkGray;
 }
 
 .wmd-preview 
 { 
-	background-color: LightGray; 
+	background-color: LightGray;
+	border: 1px solid DarkGray;
+	width:898px;
+	height:320px;
+	overflow:scroll;
+	margin-top:15px;
+	padding:15px;
 }
 
 .wmd-output 
@@ -135,7 +140,7 @@
 .wmd-redo-button:hover      {background-position: -220px -40px;}
 .wmd-redo-button.disabled   {background-position: -220px -20px;}
 
-.wmd-help-button            {background-position: -240px   0px;}
+.wmd-help-button            {background-position: -240px   0px;display:none;}
 .wmd-help-button:hover      {background-position: -240px -40px;}
 .wmd-help-button.disabled   {background-position: -240px -20px;}
 
