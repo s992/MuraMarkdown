@@ -142,29 +142,4 @@
 		<cfreturn returnHTML />
 	</cffunction>
 
-<!--- will fix these later
-	<cffunction name="getMarkdownProcessor" access="private" returntype="any" output="false">
-		<cfargument name="$" required="true" hint="mura scope">
-
-		<cfset var path = "#$.globalConfig('context')#/plugins/#variables.pluginConfig.getDirectory()#" />
-		<cfset var mkdownPath = [ expandPath( "#path#/markdown/markdownj.jar" ) ] />
-		<cfset var javaLoader = new javaloader.JavaLoader( mkdownPath, true ) />
-		<cfset var markdownProcessor = javaLoader.create( "com.petebevin.markdown.MarkdownProcessor" ).init() />
-
-		<cfreturn markdownProcessor />
-
-	</cffunction>
-
-	<cffunction name="getJsoup" access="private" returntype="any" output="false">
-		<cfargument name="$" required="true" hint="mura scope">
-
-		<cfset var path = "#$.globalConfig('context')#/plugins/#variables.pluginConfig.getDirectory()#" />
-		<cfset var jsoupPath = [ expandPath( "#path#/jsoup/jsoup.jar" ) ] />
-		<cfset var javaLoader = new javaloader.JavaLoader( jsoupPath, true ) />
-		<cfset var jsoup = javaLoader.create( "org.jsoup.Jsoup" ) />
-
-		<cfreturn jsoup />
-
-	</cffunction>
---->
 </cfcomponent>
