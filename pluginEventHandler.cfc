@@ -101,7 +101,25 @@
 
 		<!--- Bring out the syntax highlighter! --->
 		<cfsavecontent variable="headerCode"><cfoutput>
-		<script type="text/javascript" src="#path#/assets/js/jquery.syntaxhighlighter.min.js"></script>
+		<script type="text/javascript" src="#path#/assets/js/jquery.syntaxhighlighter.js"></script>
+		<script type="text/javascript">
+		jQuery.SyntaxHighlighter.config = {
+			'load': true,
+			'highlight': true,
+			'debug': false,
+			'wrapLines': false,
+			'lineNumbers': true,
+			'stripEmptyStartFinishLines': true,
+			'stripInitialWhitespace': true,
+			'alternateLines': false,
+			'defaultClassname': 'highlight',
+			'theme': 'balupton',
+			'themes': ['balupton'],
+			'addSparkleExtension': true,
+			'prettifyBaseUrl': '#path#/assets/js/syntaxhighlighter/prettify',
+			'baseUrl': '#path#/assets/js/syntaxhighlighter'
+		};
+		</script>
 		<script type="text/javascript" src="#path#/assets/js/shInit.js"></script>
 		</cfoutput></cfsavecontent>
 
