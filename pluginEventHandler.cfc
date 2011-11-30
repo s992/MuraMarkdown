@@ -14,10 +14,14 @@
 
 		<cfset var headerCode = '' />
 		<cfset var path = "#$.globalConfig('context')#/plugins/#variables.pluginConfig.getDirectory()#" />
+		<cfset var customCSS = "#$.siteConfig('themeAssetPath')#/css/markdown.css" />
 
 		<!--- Include the necessary JS/CSS in the header --->
 		<cfsavecontent variable="headerCode"><cfoutput>
 			<link rel="stylesheet" href="#path#/assets/css/wmd.css" />
+			<cfif fileExists( expandPath( customCSS ) )>
+				<link rel="stylesheet" href="#customCSS#">
+			</cfif>
 			<script type="text/javascript" src="#path#/assets/js/showdown.js"></script>
 			<script type="text/javascript" src="#path#/assets/js/to-markdown.js"></script>
 			<script type="text/javascript" src="#path#/assets/js/wmd.js"></script>
