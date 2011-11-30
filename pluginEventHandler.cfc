@@ -5,11 +5,11 @@
 	<cffunction name="onApplicationLoad" access="public" output="false">
 		<cfargument name="$" required="true" hint="mura scope">
 
-		<cfset application.configBean.setValue("htmlEditorType","none") />
+		<cfset application.configBean.setValue( 'htmlEditorType', 'none' ) />
 
 	</cffunction>
 
-	<cffunction name="onContentEdit" access="public" output="true">
+	<cffunction name="onContentEdit" access="public" output="false">
 		<cfargument name="$" required="true" hint="mura scope">
 
 		<cfset var headerCode = '' />
@@ -19,40 +19,74 @@
 		<cfsavecontent variable="headerCode"><cfoutput>
 			<link rel="stylesheet" href="#path#/assets/css/wmd.css" />
 			<script type="text/javascript" src="#path#/assets/js/showdown.js"></script>
-		</cfoutput></cfsavecontent>
-
-		<cfhtmlhead text="#headerCode#" />
-
-		<!--- This will allow us to preview our markdown --->
-		<cfoutput>
+			<script type="text/javascript" src="#path#/assets/js/to-markdown.js"></script>
 			<script type="text/javascript" src="#path#/assets/js/wmd.js"></script>
 			<script type="text/javascript">
 			jQuery(document).ready(function(){
-				jQuery('##summary')
-					.before('<div id="summary-button-bar"></div>')
-					.after('<div id="summary-preview"></div>');
 
-				jQuery('##body')
-					.before('<div id="body-button-bar"></div>')
-					.after('<div id="body-preview"></div>');
-			
-				setup_wmd({
-					input: "summary",
-					button_bar: "summary-button-bar",
-					preview: "summary-preview",
-					helpLink: "#path#/markdownhelp.html"
-				});
+				removeTab();
+				setupMarkdown( 'body' );
+				setupMarkdown( 'summary' );
+				replaceHTML( 'body' );
+				replaceHTML( 'summary' );
 
-				setup_wmd({
-					input: "body",
-					button_bar: "body-button-bar",
-					preview: "body-preview",
-					helpLink: "#path#/markdownhelp.html"
-				});
 			});
-			</script>
-		</cfoutput>
 
+			/**
+			* Adds necessary divs for preview and button bar,
+			* then starts up WMD for live markdown preview
+			*/
+			function setupMarkdown( id ) {
+				var txtArea = jQuery( 'textarea##' + id )
+					buttonBar = jQuery( '<div></div>' )
+					preview = jQuery( '<div></div>' );
+
+				buttonBar.attr( 'id', id + '-button-bar' )
+						 .addClass( 'wmd-button-bar' );
+				preview.attr( 'id', id + '-preview' )
+					   .addClass( 'wmd-preview' );
+
+				txtArea.before( buttonBar )
+					   .after( preview )
+					   .addClass( 'wmd-input' );
+				
+				setup_wmd({
+					input: id,
+					button_bar: id + '-button-bar',
+					preview: id + '-preview'
+				});
+			}
+
+			/**
+			* We store the content as HTML converted from markdown,
+			* so to edit it later we need to convert it back to
+			* markdown.
+			*/
+			function replaceHTML( id ) {
+				var html = jQuery( '##' + id + '-preview' ).html()
+					txtArea = jQuery( 'textarea##' + id );
+
+				txtArea.html( toMarkdown( html ) );
+			}
+
+			/**
+			* This removes the tab that Mura automatically inserts
+			* when we use the onContentEdit event.
+			*/
+			function removeTab() {
+				jQuery( 'div.tabs ul li a span' ).each(function(){
+					var thisTab = jQuery( this );
+
+					if( thisTab.text() == '#variables.pluginConfig.getName()#' ){
+						thisTab.parent().parent().hide();
+					}
+				});
+			}
+			</script>
+		</cfoutput></cfsavecontent>
+
+		<cfhtmlhead text="#headerCode#" />
+		
 	</cffunction>
 
 	<cffunction name="onRenderStart" access="public" output="true">
@@ -71,16 +105,15 @@
 
 	</cffunction>
 
-	<cffunction name="onPageBodyRender" access="public" output="true">
+	<cffunction name="onBeforeContentSave" access="public" output="false">
 		<cfargument name="$" required="true" hint="mura scope">
 
-		<cfset var body = $.content().getBody() />
 		<cfset var summary = $.content().getSummary() />
-
-		<cfset body =  processMarkdown( $, body ) />
-		<cfset $.content().setSummary( processMarkdown( $, summary ) ) />
+		<cfset var body = $.content().getBody() />
 		
-		<cfoutput>#body#</cfoutput>
+		<!--- We save the content as plain old HTML --->
+		<cfset $.content().setSummary( processMarkdown( $, summary) ) />
+		<cfset $.content().setBody( processMarkdown( $, body) ) />
 
 	</cffunction>
 
