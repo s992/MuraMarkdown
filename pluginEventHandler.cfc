@@ -157,7 +157,7 @@
 				reReplaceNoCase(
 					returnHTML,
 					'<pre><code>(.+?)</code></pre>',
-					'<pre class="highlight">\1</pre>',
+					'<pre class="highlight"><code>\1</code></pre>',
 					'all'
 				) />
 
