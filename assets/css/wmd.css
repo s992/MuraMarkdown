@@ -15,9 +15,6 @@
 .wmd-button-bar 
 {
 	width: 100%;
-	/*
-	background-color: Silver; 
-	*/
 }
 
 .wmd-input 
@@ -28,14 +25,44 @@
 }
 
 .wmd-preview 
-{ 
-	background-color: LightGray;
-	border: 1px solid DarkGray;
-	width:898px;
-	height:320px;
-	overflow:scroll;
-	margin-top:15px;
-	padding:15px;
+{
+	width:904px;
+	border: 2px dotted #CCCCCC;
+    padding: 10px;
+}
+
+.wmd-preview pre, .wmd-preview code
+{
+	background: #EEE;
+	margin-bottom:1em;
+}
+
+.wmd-preview-toggle
+{
+	border:2px solid #DBDBDB;
+	width:15%;
+	text-align:center;
+	margin: 10px auto;
+	color:black;
+	-webkit-border-radius: 10px;
+	-moz-border-radius: 10px;
+	border-radius: 10px;
+}
+
+.wmd-preview-toggle:active{
+	border:2px solid #CCCCCC;
+	color:#CCCCCC;
+}
+
+.wmd-preview-toggle p
+{
+	margin:0;
+	font-weight:bold;
+}
+
+.wmd-preview-toggle:hover
+{
+	cursor:pointer;
 }
 
 .wmd-output 

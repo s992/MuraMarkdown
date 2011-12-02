@@ -2,13 +2,6 @@
 
 	<cfset variables.pluginConfig = application.pluginManager.getConfig( 'MuraMarkdown' ) />
 
-	<cffunction name="onApplicationLoad" access="public" output="false">
-		<cfargument name="$" required="true" hint="mura scope">
-
-		<cfset application.configBean.setValue( 'htmlEditorType', 'none' ) />
-
-	</cffunction>
-
 	<cffunction name="onContentEdit" access="public" output="false">
 		<cfargument name="$" required="true" hint="mura scope">
 
@@ -27,14 +20,31 @@
 			<script type="text/javascript" src="#path#/assets/js/wmd.js"></script>
 			<script type="text/javascript">
 			jQuery(document).ready(function(){
+				var instances = [ 'body', 'summary' ];
 
+				removeEditor( instances );
 				removeTab();
-				setupMarkdown( 'body' );
-				setupMarkdown( 'summary' );
-				replaceHTML( 'body' );
-				replaceHTML( 'summary' );
+
+				// We need to make sure the "edit summary" section goes back
+				// to being hidden.
+				toggleDisplay('editSummary','Expand','Close');
 
 			});
+
+			/**
+			* Removes CK Editor and then sets up markdown and textarea content.
+			*/
+			function removeEditor( names ) {
+				jQuery.each( names, function(index, name){
+					jQuery( '##' + name ).bind( 'instanceReady.ckeditor', function(e, i){
+						i.destroy();
+						setupMarkdown( i.name );
+						replaceHTML( i.name );
+						handlePreviewToggle( i.name ); 
+						return false;
+					});
+				});
+			}
 
 			/**
 			* Adds necessary divs for preview and button bar,
@@ -43,15 +53,23 @@
 			function setupMarkdown( id ) {
 				var txtArea = jQuery( 'textarea##' + id )
 					buttonBar = jQuery( '<div></div>' )
-					preview = jQuery( '<div></div>' );
+					preview = jQuery( '<div></div>' )
+					previewToggle = jQuery( '<div></div>' );
 
 				buttonBar.attr( 'id', id + '-button-bar' )
 						 .addClass( 'wmd-button-bar' );
+
 				preview.attr( 'id', id + '-preview' )
+					   .css('display', 'none')
 					   .addClass( 'wmd-preview' );
+
+				previewToggle.attr( 'id', id + '-preview-toggle' )
+							 .addClass( 'wmd-preview-toggle' )
+							 .html( '<p>Show Preview</p>' );
 
 				txtArea.before( buttonBar )
 					   .after( preview )
+					   .after( previewToggle )
 					   .addClass( 'wmd-input' );
 				
 				setup_wmd({
@@ -68,9 +86,13 @@
 			*/
 			function replaceHTML( id ) {
 				var html = jQuery( '##' + id + '-preview' ).html()
-					txtArea = jQuery( 'textarea##' + id );
+					txtArea = jQuery( 'textarea##' + id )
+					mkdown = toMarkdown( html );
 
-				txtArea.html( toMarkdown( html ) );
+				txtArea.html('');
+				txtArea.val('');
+				txtArea.html( mkdown );
+				txtArea.val( mkdown );
 			}
 
 			/**
@@ -84,6 +106,17 @@
 					if( thisTab.text() == '#variables.pluginConfig.getName()#' ){
 						thisTab.parent().parent().hide();
 					}
+				});
+			}
+
+			/**
+			* This allows us to turn the preview DIV on and off.
+			*/
+			function handlePreviewToggle( name ) {
+				jQuery('##' + name + '-preview-toggle').click(function(){
+					var msg = jQuery(this).find('p');
+					jQuery('##' + name + '-preview').slideToggle('slow');
+					msg.html() == 'Show Preview' ? msg.html('Hide Preview') : msg.html('Show Preview');
 				});
 			}
 			</script>
