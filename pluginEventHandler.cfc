@@ -151,15 +151,6 @@
 		<!--- First, process the markdown --->
 		<cfset returnHTML = markdownProcessor.markdown( arguments.html ) />
 
-		<!--- Then manipulate it a little bit to get our syntax highlighting working --->
-		<cfset returnHTML = 
-				reReplaceNoCase(
-					returnHTML,
-					'<pre><code>(.+?)</code></pre>',
-					'<pre class="prettyprint"><code>\1</code></pre>',
-					'all'
-				) />
-
 		<cfreturn returnHTML />
 	</cffunction>
 
