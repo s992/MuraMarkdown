@@ -126,40 +126,6 @@
 		
 	</cffunction>
 
-	<cffunction name="onRenderStart" access="public" output="true">
-		<cfargument name="$" required="true" hint="mura scope">
-
-		<cfset var headerCode = '' />
-		<cfset var path = "#$.globalConfig('context')#/plugins/#variables.pluginConfig.getDirectory()#" />
-
-		<!--- Bring out the syntax highlighter! --->
-		<cfsavecontent variable="headerCode"><cfoutput>
-		<script type="text/javascript" src="#path#/assets/js/jquery.syntaxhighlighter.js"></script>
-		<script type="text/javascript">
-		jQuery.SyntaxHighlighter.config = {
-			'load': true,
-			'highlight': true,
-			'debug': false,
-			'wrapLines': false,
-			'lineNumbers': true,
-			'stripEmptyStartFinishLines': true,
-			'stripInitialWhitespace': true,
-			'alternateLines': false,
-			'defaultClassname': 'highlight',
-			'theme': 'markdown',
-			'themes': ['markdown'],
-			'addSparkleExtension': true,
-			'prettifyBaseUrl': '#path#/assets/js/syntaxhighlighter/prettify',
-			'baseUrl': '#path#/assets/js/syntaxhighlighter'
-		};
-		</script>
-		<script type="text/javascript" src="#path#/assets/js/shInit.js"></script>
-		</cfoutput></cfsavecontent>
-
-		<cfhtmlhead text="#headerCode#" />
-
-	</cffunction>
-
 	<cffunction name="onBeforeContentSave" access="public" output="false">
 		<cfargument name="$" required="true" hint="mura scope">
 
@@ -190,7 +156,7 @@
 				reReplaceNoCase(
 					returnHTML,
 					'<pre><code>(.+?)</code></pre>',
-					'<pre class="highlight"><code>\1</code></pre>',
+					'<pre class="prettyprint"><code>\1</code></pre>',
 					'all'
 				) />
 
