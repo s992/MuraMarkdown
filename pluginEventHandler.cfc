@@ -2,6 +2,9 @@
 
 	<cfset variables.pluginConfig = application.pluginManager.getConfig( 'MuraMarkdown' ) />
 
+	<!---
+		All the client side previewing is handled here.
+	--->
 	<cffunction name="onContentEdit" access="public" output="false">
 		<cfargument name="$" required="true" hint="mura scope">
 
@@ -11,121 +14,39 @@
 
 		<!--- Include the necessary JS/CSS in the header --->
 		<cfsavecontent variable="headerCode"><cfoutput>
+
+			<!--- This stylesheet contains the necessary styles for the WMD button bar --->
 			<link rel="stylesheet" href="#path#/assets/css/wmd.css" />
+
+			<!--- If the user wishes to include their own styling for anything here, they can. --->
 			<cfif fileExists( expandPath( customCSS ) )>
 				<link rel="stylesheet" href="#customCSS#">
 			</cfif>
+
+			<!--- Showdown is used to convert Markdown to HTML for the preview section --->
 			<script type="text/javascript" src="#path#/assets/js/showdown.js"></script>
+
+			<!--- To-markdown is used to convert HTML to Markdown for the editing section --->
 			<script type="text/javascript" src="#path#/assets/js/to-markdown.js"></script>
+
+			<!--- WMD handles all the button bars --->
 			<script type="text/javascript" src="#path#/assets/js/wmd.js"></script>
-			<script type="text/javascript">
-			jQuery(document).ready(function(){
-				var instances = [ 'body', 'summary' ];
 
-				removeEditor( instances );
-				removeTab();
-
-				// We need to make sure the "edit summary" section goes back
-				// to being hidden.
-				toggleDisplay('editSummary','Expand','Close');
-
-			});
-
-			/**
-			* Removes CK Editor and then sets up markdown and textarea content.
-			*/
-			function removeEditor( names ) {
-				jQuery.each( names, function(index, name){
-					jQuery( '##' + name ).bind( 'instanceReady.ckeditor', function(e, i){
-						i.destroy();
-						setupMarkdown( i.name );
-						replaceHTML( i.name );
-						handlePreviewToggle( i.name ); 
-						return false;
-					});
-				});
-			}
-
-			/**
-			* Adds necessary divs for preview and button bar,
-			* then starts up WMD for live markdown preview
-			*/
-			function setupMarkdown( id ) {
-				var txtArea = jQuery( 'textarea##' + id )
-					buttonBar = jQuery( '<div></div>' )
-					preview = jQuery( '<div></div>' )
-					previewToggle = jQuery( '<div></div>' );
-
-				buttonBar.attr( 'id', id + '-button-bar' )
-						 .addClass( 'wmd-button-bar' );
-
-				preview.attr( 'id', id + '-preview' )
-					   .css('display', 'none')
-					   .addClass( 'wmd-preview' );
-
-				previewToggle.attr( 'id', id + '-preview-toggle' )
-							 .addClass( 'wmd-preview-toggle' )
-							 .html( '<p>Show Preview</p>' );
-
-				txtArea.before( buttonBar )
-					   .after( preview )
-					   .after( previewToggle )
-					   .addClass( 'wmd-input' );
-				
-				setup_wmd({
-					input: id,
-					button_bar: id + '-button-bar',
-					preview: id + '-preview'
-				});
-			}
-
-			/**
-			* We store the content as HTML converted from markdown,
-			* so to edit it later we need to convert it back to
-			* markdown.
-			*/
-			function replaceHTML( id ) {
-				var html = jQuery( '##' + id + '-preview' ).html()
-					txtArea = jQuery( 'textarea##' + id )
-					mkdown = toMarkdown( html );
-
-				txtArea.html('');
-				txtArea.val('');
-				txtArea.html( mkdown );
-				txtArea.val( mkdown );
-			}
-
-			/**
-			* This removes the tab that Mura automatically inserts
-			* when we use the onContentEdit event.
-			*/
-			function removeTab() {
-				jQuery( 'div.tabs ul li a span' ).each(function(){
-					var thisTab = jQuery( this );
-
-					if( thisTab.text() == '#variables.pluginConfig.getName()#' ){
-						thisTab.parent().parent().hide();
-					}
-				});
-			}
-
-			/**
-			* This allows us to turn the preview DIV on and off.
-			*/
-			function handlePreviewToggle( name ) {
-				jQuery('##' + name + '-preview-toggle').click(function(){
-					var msg = jQuery(this).find('p');
-					jQuery('##' + name + '-preview').slideToggle('slow');
-					msg.html() == 'Show Preview' ? msg.html('Hide Preview') : msg.html('Show Preview');
-				});
-			}
-			</script>
+			<!--- 
+				This script initializes all the scripts above along with destroying
+				CK Editor instances for Body and Summary
+			--->
+			<script type="text/javascript" src="#path#/assets/js/muraMarkdown.min.js"></script>
 		</cfoutput></cfsavecontent>
 
 		<cfhtmlhead text="#headerCode#" />
 		
 	</cffunction>
 
+	<!---
+		The content is saved as plain HTML for maximum compatibility with any
+		WYSIWYG editor. Prior to saving, we'll convert the markdown into HTML.
+	--->
 	<cffunction name="onBeforeContentSave" access="public" output="false">
 		<cfargument name="$" required="true" hint="mura scope">
 
@@ -144,12 +65,18 @@
 
 		<cfset var path = "#$.globalConfig('context')#/plugins/#variables.pluginConfig.getDirectory()#" />
 		<cfset var mkdownPath = [ expandPath( "#path#/markdown/markdownj.jar" ) ] />
-		<cfset var javaLoader = new javaloader.JavaLoader( mkdownPath, true ) />
+		<cfset var javaLoader = createObject( 'component', 'javaloader.JavaLoader' ).init( mkdownPath, true ) />
 		<cfset var markdownProcessor = javaLoader.create( "com.petebevin.markdown.MarkdownProcessor" ).init() />
 		<cfset var returnHTML = '' />
 
-		<!--- First, process the markdown --->
+		<!--- Process the markdown --->
 		<cfset returnHTML = markdownProcessor.markdown( arguments.html ) />
+
+		<!--- MarkdownJ loves to covert our HTML entities over and over for some reason. --->
+		<cfset returnHTML = reReplace( returnHTML, '[&amp;]+lt;', '&lt;', 'all' ) />
+		<cfset returnHTML = reReplace( returnHTML, '[&amp;]+gt;', '&gt;', 'all' ) />
+		<cfset returnHTML = reReplace( returnHTML, '[&amp;]+amp;', '&amp;', 'all' ) />
+		<cfset returnHTML = reReplace( returnHTML, '[&amp;]+quot;', '&quot;', 'all' ) />
 
 		<cfreturn returnHTML />
 	</cffunction>
