@@ -51,7 +51,8 @@
 
 .wmd-preview-toggle:active{
 	border:2px solid #CCCCCC;
-	color:#CCCCCC;
+	position:relative;
+	top:2px;
 }
 
 .wmd-preview-toggle p
