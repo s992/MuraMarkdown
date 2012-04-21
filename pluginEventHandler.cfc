@@ -1,84 +1,62 @@
-<cfcomponent name="pluginEventHandler" extends="mura.plugin.pluginGenericEventHandler">
+component extends='mura.plugin.pluginGenericEventHandler' {
 
-	<cfset variables.pluginConfig = application.pluginManager.getConfig( 'MuraMarkdown' ) />
+	variables.pluginConfig = application.pluginManager.getConfig( 'MuraMarkdown' );
 
-	<!---
-		All the client side previewing is handled here.
-	--->
-	<cffunction name="onContentEdit" access="public" output="false">
-		<cfargument name="$" required="true" hint="mura scope">
+	public void function onContentEdit( required $ ) {
+		variables.pluginConfig.addToHTMLHeadQueue( 'headcode.cfm' );
+	}
 
-		<cfset var headerCode = '' />
-		<cfset var path = "#$.globalConfig('context')#/plugins/#variables.pluginConfig.getDirectory()#" />
-		<cfset var customCSS = "#$.siteConfig('themeAssetPath')#/css/markdown.css" />
+	public void function onBeforeContentSave( required $ ) {
+		var summary = $.content('summary');
+		var body = $.content('body');
 
-		<!--- Include the necessary JS/CSS in the header --->
-		<cfsavecontent variable="headerCode"><cfoutput>
+		$.content( 'summary', processMarkdown( $, summary ) );
+		$.content( 'body', processMarkdown( $, body ) );
 
-			<!--- This stylesheet contains the necessary styles for the WMD button bar --->
-			<link rel="stylesheet" href="#path#/assets/css/wmd.css" />
+		dealWithExtendedAttributes( $ );
+	}
 
-			<!--- If the user wishes to include their own styling for anything here, they can. --->
-			<cfif fileExists( expandPath( customCSS ) )>
-				<link rel="stylesheet" href="#customCSS#">
-			</cfif>
+	private void function dealWithExtendedAttributes( required $ ) {
+		var rsAttributes = $.content().getExtendedData().getAllValues().data;
+		var attributeList = '';
+		var qrySvc = '';
 
-			<!--- Showdown is used to convert Markdown to HTML for the preview section --->
-			<script type="text/javascript" src="#path#/assets/js/showdown.js"></script>
+		if( rsAttributes.recordCount ) {
+			attributeList = valueList( rsAttributes, 'attributeID' );
+			qrySvc = new query()
+							.setDatasource( $.globalConfig( 'datasource' ) )
+							.setUsername( $.globalConfig( 'dbUsername' ) )
+							.setPassword( $.globalConfig( 'dbPassword' ) );
 
-			<!--- To-markdown is used to convert HTML to Markdown for the editing section --->
-			<script type="text/javascript" src="#path#/assets/js/to-markdown.js"></script>
+			qrySvc.setSQL("
+				SELECT
+					name
+					, attributeID
+				FROM
+					tclassextendattributes
+				WHERE
+					attributeID IN ( :attributeList )
+				AND
+					type = 'HTMLEditor'
+			");
 
-			<!--- WMD handles all the button bars --->
-			<script type="text/javascript" src="#path#/assets/js/wmd.js"></script>
+			qrySvc.addParam( name = 'attributeList', value = attributeList, cfsqltype = 'CF_SQL_VARCHAR', list = true );
+			rsAttributes = qrySvc.executeQuery().getResults();
 
-			<!--- 
-				This script initializes all the scripts above along with destroying
-				CK Editor instances for Body and Summary
-			--->
-			<script type="text/javascript" src="#path#/assets/js/muraMarkdown.min.js"></script>
-		</cfoutput></cfsavecontent>
+			for( var i = 1; i LTE rsAttributes.recordCount; i++ ) {
+				$.content( rsAttributes.name, processMarkdown( $, rsAttributes.name ) );
+			}
+		}
 
-		<cfhtmlhead text="#headerCode#" />
-		
-	</cffunction>
+	}
 
-	<!---
-		The content is saved as plain HTML for maximum compatibility with any
-		WYSIWYG editor. Prior to saving, we'll convert the markdown into HTML.
-	--->
-	<cffunction name="onBeforeContentSave" access="public" output="false">
-		<cfargument name="$" required="true" hint="mura scope">
+	private string function processMarkdown( required $, required string html ) {
+		var pluginPath = $.globalConfig('context') & '/plugins/' & variables.pluginConfig.getDirectory();
+		var jarPath = [ expandPath( pluginPath & '/markdown/markdownj.jar' ) ];
+		var javaLoader = new javaloader.JavaLoader( jarPath, true );
+		var processor = javaLoader.create( 'com.petebevin.markdown.MarkdownProcessor' ).init();
 
-		<cfset var summary = $.content().getSummary() />
-		<cfset var body = $.content().getBody() />
-		
-		<!--- We save the content as plain old HTML --->
-		<cfset $.content().setSummary( processMarkdown( $, summary) ) />
-		<cfset $.content().setBody( processMarkdown( $, body) ) />
+		return processor.markdown( arguments.html );
+	}
 
-	</cffunction>
-
-	<cffunction name="processMarkdown" access="private" returntype="string" output="false">
-		<cfargument name="$" required="true" hint="mura scope">
-		<cfargument name="html" required="true" type="string">
-
-		<cfset var path = "#$.globalConfig('context')#/plugins/#variables.pluginConfig.getDirectory()#" />
-		<cfset var mkdownPath = [ expandPath( "#path#/markdown/markdownj.jar" ) ] />
-		<cfset var javaLoader = createObject( 'component', 'javaloader.JavaLoader' ).init( mkdownPath, true ) />
-		<cfset var markdownProcessor = javaLoader.create( "com.petebevin.markdown.MarkdownProcessor" ).init() />
-		<cfset var returnHTML = '' />
-
-		<!--- Process the markdown --->
-		<cfset returnHTML = markdownProcessor.markdown( arguments.html ) />
-
-		<!--- MarkdownJ loves to covert our HTML entities over and over for some reason. --->
-		<cfset returnHTML = reReplace( returnHTML, '[&amp;]+lt;', '&lt;', 'all' ) />
-		<cfset returnHTML = reReplace( returnHTML, '[&amp;]+gt;', '&gt;', 'all' ) />
-		<cfset returnHTML = reReplace( returnHTML, '[&amp;]+amp;', '&amp;', 'all' ) />
-		<cfset returnHTML = reReplace( returnHTML, '[&amp;]+quot;', '&quot;', 'all' ) />
-
-		<cfreturn returnHTML />
-	</cffunction>
-
-</cfcomponent>
+}
