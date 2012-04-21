@@ -24,5 +24,5 @@ writeOutput( '<script type="text/javascript" src="#local.pluginAssetPath#/js/wmd
 
 // The main script for the plugin, this initializes the above scripts and makes
 // the magic happen.
-writeOutput( '<script type="text/javascript" src="#local.pluginAssetPath#/js/muraMarkdown.js"></script>' );
+writeOutput( '<script type="text/javascript" src="#local.pluginAssetPath#/js/muraMarkdown.min.js"></script>' );
 </cfscript>
