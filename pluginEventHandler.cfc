@@ -7,16 +7,20 @@ component extends='mura.plugin.pluginGenericEventHandler' {
 	}
 
 	public void function onBeforeContentSave( required $ ) {
+		var pluginPath = $.globalConfig('context') & '/plugins/' & variables.pluginConfig.getDirectory();
+		var jarPath = [ expandPath( pluginPath & '/markdown/markdownj.jar' ) ];
+		var processor = $.getBean('javaloader').init( jarPath ).create( 'com.petebevin.markdown.MarkdownProcessor' ).init();
+
 		var summary = $.content('summary');
 		var body = $.content('body');
 
-		$.content( 'summary', processMarkdown( $, summary ) );
-		$.content( 'body', processMarkdown( $, body ) );
+		$.content( 'summary', processMarkdown( processor, summary ) );
+		$.content( 'body', processMarkdown( processor, body ) );
 
-		dealWithExtendedAttributes( $ );
+		processExtendedAttributes( $, processor );
 	}
 
-	private void function dealWithExtendedAttributes( required $ ) {
+	private void function processExtendedAttributes( required $, required processor ) {
 		var rsAttributes = $.content().getExtendedData().getAllValues().data;
 		var attributeList = '';
 		var qrySvc = '';
@@ -44,19 +48,14 @@ component extends='mura.plugin.pluginGenericEventHandler' {
 			rsAttributes = qrySvc.executeQuery().getResults();
 
 			for( var i = 1; i LTE rsAttributes.recordCount; i++ ) {
-				$.content( rsAttributes.name, processMarkdown( $, rsAttributes.name ) );
+				$.content( rsAttributes.name, processMarkdown( arguments.processor, rsAttributes.name ) );
 			}
 		}
 
 	}
 
-	private string function processMarkdown( required $, required string html ) {
-		var pluginPath = $.globalConfig('context') & '/plugins/' & variables.pluginConfig.getDirectory();
-		var jarPath = [ expandPath( pluginPath & '/markdown/markdownj.jar' ) ];
-		var javaLoader = new javaloader.JavaLoader( jarPath, true );
-		var processor = javaLoader.create( 'com.petebevin.markdown.MarkdownProcessor' ).init();
-
-		return processor.markdown( arguments.html );
+	private string function processMarkdown( required processor, required string html ) {
+		return arguments.processor.markdown( arguments.html );
 	}
 
 }
