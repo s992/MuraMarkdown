@@ -26,7 +26,7 @@ component extends='mura.plugin.pluginGenericEventHandler' {
 		var qrySvc = '';
 
 		if( rsAttributes.recordCount ) {
-			attributeList = valueList( rsAttributes, 'attributeID' );
+			attributeList = valueList( rsAttributes.attributeID );
 			qrySvc = new query()
 							.setDatasource( $.globalConfig( 'datasource' ) )
 							.setUsername( $.globalConfig( 'dbUsername' ) )
@@ -45,17 +45,18 @@ component extends='mura.plugin.pluginGenericEventHandler' {
 			");
 
 			qrySvc.addParam( name = 'attributeList', value = attributeList, cfsqltype = 'CF_SQL_VARCHAR', list = true );
-			rsAttributes = qrySvc.executeQuery().getResults();
+			rsAttributes = qrySvc.execute().getResult();
 
 			for( var i = 1; i LTE rsAttributes.recordCount; i++ ) {
-				$.content( rsAttributes.name, processMarkdown( arguments.processor, rsAttributes.name ) );
+				var content = $.content( rsAttributes.name );
+				$.content( rsAttributes.name, processMarkdown( arguments.processor, content ) );
 			}
 		}
 
 	}
 
-	private string function processMarkdown( required processor, required string html ) {
-		return arguments.processor.markdown( arguments.html );
+	private string function processMarkdown( required processor, required string content ) {
+		return arguments.processor.markdown( arguments.content );
 	}
 
 }

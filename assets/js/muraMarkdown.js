@@ -11,7 +11,7 @@ jQuery(function($){
 			this.$pluginTab = $('a[href=#tabsysMuramarkdown]').parent();
 		},
 		bindEvents: function() {
-			this.$textareas.on( 'instanceReady.ckeditor', this.removeEditor );
+			this.$textareas.live( 'instanceReady.ckeditor', this.removeEditor );
 		},
 		render: function() {
 			this.$pluginTab.hide();
