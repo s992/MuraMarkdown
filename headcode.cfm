@@ -14,10 +14,10 @@ if( fileExists( expandPath( local.customCSS ) ) ) {
 }
 
 // Showdown is used to convert Markdown to HTML for the preview section
-writeOutput( '<script type="text/javascript" src="#local.pluginAssetPath#/js/showdown.js"></script>' );
+writeOutput( '<script type="text/javascript" src="#local.pluginAssetPath#/js/showdown.min.js"></script>' );
 
 // To-markdown is used to convert HTML to Markdown for the editing section
-writeOutput( '<script type="text/javascript" src="#local.pluginAssetPath#/js/to-markdown.js"></script>' );
+writeOutput( '<script type="text/javascript" src="#local.pluginAssetPath#/js/to-markdown.min.js"></script>' );
 
 // WMD handles all the button bars
 writeOutput( '<script type="text/javascript" src="#local.pluginAssetPath#/js/wmd.js"></script>' );
